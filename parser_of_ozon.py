@@ -28,7 +28,7 @@ def scrolldown(driver, deep):
 def get_page_cards(driver, url):
     massive_of_blocks_cards = []
     driver.get(url)
-    scrolldown(driver, 50)
+    scrolldown(driver, 100)
     
     page_html = BeautifulSoup(driver.page_source, 'html.parser')
     content = page_html.find('div', {'class': 'container'})
@@ -40,11 +40,23 @@ def get_page_cards(driver, url):
     for list_of_cards in content: #Перебираем списки карточек в во всей странице
         list_of_cards = list_of_cards.find('div') 
         list_of_cards = list_of_cards.findChildren(recursive=False)
+
         for card in list_of_cards: #Перебираем карточки в списке карточек
-            card_url = card.find('a', href=True)["href"]
+            card_url = card.find('a', href=True)
             card_name = card.find('span', class_='tsBody500Medium')
-            card_name = card_name.text
-            print(f'Ссылка на карточку: {'https://www.ozon.ru/'+card_url}, Название карточки: {card_name}')
+
+            if card_url is None:
+                print("Link not found in card")
+                continue
+
+            card_url_value = card_url["href"]
+
+            if card_name is None:
+                print("Card name not found in card")
+                continue
+
+            card_name_value = card_name.text
+            print(f'Ссылка на карточку: {'https://www.ozon.ru'+card_url_value}, Название карточки: {card_name_value}')
 
 
 
