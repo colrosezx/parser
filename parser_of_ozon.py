@@ -89,6 +89,7 @@ def get_info_about_card(card_url_value):
 def collect_information_about_products(product_url, article, marketplace, 
                                        product_name, price_without_discount, 
                                        price_with_discount, quantity_of_goods) -> list:
+    pass
     
     
 
