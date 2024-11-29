@@ -1,5 +1,5 @@
 import aiohttp
-# import requests
+
 from bs4 import BeautifulSoup
 import asyncio
 from selenium import webdriver
@@ -91,30 +91,6 @@ def collect_information_about_products(product_url, article, marketplace,
                                        price_with_discount, quantity_of_goods) -> list:
     pass
     
-    
-
-        
-
-    
-    # content = content.find('div')
-    
-
-    
-    # content = content.find('div')
-    # content = content.findChildren(recursive=False)
-    # content = content.find('a')
-    # url_on_item = content
-    # content = content.findChildren(recursive=False)
-
-    
-
-    # print(len(content))
-    return
-
-
-
-
-
 
 driver = init_webdriver()
 get_page_cards(driver, url)
