@@ -1,16 +1,14 @@
-import aiohttp
 from bs4 import BeautifulSoup
-import asyncio
 import psycopg2
 from selenium import webdriver
 from selenium_stealth import stealth
-import undetected_chromedriver as uc
 import time
 from curl_cffi import requests
 import json
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from database import insert_into_database
 
 url = 'https://www.ozon.ru/category/smartfony-15502/'
 
@@ -27,7 +25,7 @@ def scrolldown(driver, deep):
 def get_page_cards(driver, url):
     massive_of_blocks_cards = []
     driver.get(url)
-    scrolldown(driver, 50)
+    scrolldown(driver, 200)
 
     page_html = BeautifulSoup(driver.page_source, 'html.parser')
     content = page_html.find('div', {'class': 'container'})
@@ -99,7 +97,7 @@ def get_info_about_card(card_url_value, card_price_without_discount,
         print('information_not_found')
 
     product_url = f'https://ozon.ru{card_url_value}'
-    marketplace = 'ozon'
+    marketplace = 'Ozon'
 
 
     collect_information_about_products(marketplace, product_url, product_article, product_name, 
@@ -114,25 +112,16 @@ def collect_information_about_products(marketplace, product_url, product_article
                                         product_name, card_price_without_discount, 
                                         card_price_with_discount, quantity_of_goods,
                                         product_description) -> list:
-
+    
+    product_article = int(product_article)
     card_price_with_discount = card_price_with_discount.replace('\u2009', '')
     card_price_without_discount = card_price_without_discount.replace('\u2009', '')
     product_description = product_description.replace('\n', ' ')
 
-    information_about_product = [
-        {
-            'Маркетплейс': marketplace,
-            'Ссылка': product_url,
-            'Артикул': product_article,
-            'Наименования карточки': product_name,
-            'Цена без скидки': card_price_without_discount,
-            'Цена со скидкой': card_price_with_discount,
-            'Остатки': quantity_of_goods,
-            'Описание': product_description
-        }
-    ]
-
-    print(information_about_product)
+    insert_into_database(marketplace, product_url, product_article, 
+                        product_name, card_price_without_discount, 
+                        card_price_with_discount, quantity_of_goods,
+                        product_description)
     
     
 
