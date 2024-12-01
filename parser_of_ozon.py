@@ -1,31 +1,18 @@
 from bs4 import BeautifulSoup
-import psycopg2
 from selenium import webdriver
 from selenium_stealth import stealth
 import time
 from curl_cffi import requests
 import json
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from database import insert_into_database
+from main_functions import init_webdriver
+from main_functions import scrolldown
 
 url = 'https://www.ozon.ru/category/smartfony-15502/'
 
-def init_webdriver():
-    driver = webdriver.Chrome()
-    stealth(driver, platform='Win64')
-    return driver
-
-def scrolldown(driver, deep):
-    for _ in range(deep):
-        driver.execute_script('window.scrollBy(0, 500)')
-        time.sleep(0.1)
-
 def get_page_cards(driver, url):
-    massive_of_blocks_cards = []
     driver.get(url)
-    scrolldown(driver, 200)
+    scrolldown(driver, 100)
 
     page_html = BeautifulSoup(driver.page_source, 'html.parser')
     content = page_html.find('div', {'class': 'container'})
@@ -91,8 +78,6 @@ def get_info_about_card(card_url_value, card_price_without_discount,
             product_name = product_name.replace('false', '')
         product_article = json.loads(json_data["seo"]["script"][0]["innerHTML"])['sku']
         product_description = json.loads(json_data['seo']['script'][0]['innerHTML'])['description']
-        product_description = product_description.replace('\n', ' ')
-
     except:
         print('information_not_found')
 
