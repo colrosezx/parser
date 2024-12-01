@@ -1,49 +1,50 @@
 from curl_cffi import requests
-from bs4 import BeautifulSoup
-from main_functions import scrolldown
-from main_functions import init_webdriver
 import json
 import time
 import asyncio
+import aiohttp
+from database import insert_into_database
 
 
-async def get_page_cards(driver, url):
-    driver.get(url)
-    scrolldown(driver, 100)
+async def fetch_requests(session, url):
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                    return await response.json()
 
-    page_html = BeautifulSoup(driver.page_source, 'html.parser')
-    content = page_html.find('div', {'class': 'product-card-list'})
-    content = content.findChildren('article')
-    tasks = []
+    except aiohttp.ClientError as e:
+        print(f"Error: {e}")
+        return
+    
+    except json.JSONDecodeError as e:
+        print(f"Ошибка декодирования JSON: {e}")
+        return
+    
 
-    for card in content:
-        product_url = card.find('div').find('a')['href']
-        task = asyncio.create_task(process_card(driver, product_url))
-        tasks.append(task)
+async def get_info_about_cards(url):
+    async with aiohttp.ClientSession() as session:
+        json_data = await fetch_requests(session, url)
+    
+        for product in json_data['data']['products']:
+                product_name = product['name']
+                product_article = product['id']
+                product_url = f'https://www.wildberries.ru/catalog/{product_article}/detail.aspx'
+                price_with_discount = product['sizes'][0]['price']['total'] / 100
+                price_without_discount = product['sizes'][0]['price']['basic'] / 100
+                quantity_of_goods = product['totalQuantity']
+                marketplace = 'Wildberries'
 
-    await asyncio.gather(*tasks)
-
-
-async def process_card(driver, url):
-
-    driver.get(url)
-    page_html = BeautifulSoup(driver.page_source, 'html.parser')
-    product_page = page_html.find('div', {'class': 'product-page'})
-    card_name = product_page.find('h1', {'class': 'product-page__title'})
-
-    print(f"Processing card: {card_name}")
-    await asyncio.sleep(1)
-
+                insert_into_database(marketplace, product_url,
+                                     product_article, product_name,
+                                     price_without_discount, price_with_discount,
+                                     quantity_of_goods, None)
 
 async def main():
-    base_url = 'https://www.wildberries.ru/catalog/elektronika/smartfony-i-telefony/vse-smartfony?page='
-    num_pages = 3  # Количество страниц, которые вы хотите пропарсить
-
-    driver = init_webdriver()
+    num_pages = 3
     tasks = []
 
     for num_page in range(1, num_pages + 1):
-        task = asyncio.create_task(get_page_cards(driver, f'{base_url}{num_page}'))
+        task = asyncio.create_task(get_info_about_cards(f'https://catalog.wb.ru/catalog/electronic22/v2/catalog?ab_testing=false&appType=1&curr=rub&dest=-5818883&page={num_page}&sort=popular&spp=30&subject=515'))
         tasks.append(task)
     
     await asyncio.gather(*tasks)
