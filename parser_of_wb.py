@@ -1,4 +1,3 @@
-from curl_cffi import requests
 import json
 import time
 import asyncio
